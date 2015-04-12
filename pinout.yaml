@@ -1,0 +1,14 @@
+buttons:
+  1: 2 #1:5 pin29
+  2: 3 #2:6 pin31
+  3: 4 #3:12 pin32
+       #4:13 pin33
+       #5:16 pin36
+       #6:19 pin19
+       #7:20 pin38 ESC
+       #8:21 pin40 ESPACO
+       #9:326 pin37 ENTER
+       #10:23 pin16 FIM
+       #11:24 pin18 DOWN
+       #12:25 pin22 UP
+       #13:27 pin13 BACKSPACE

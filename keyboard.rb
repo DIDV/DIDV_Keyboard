@@ -1,5 +1,6 @@
 require 'pi_piper'
 include PiPiper
+require 'yaml'
 #require 'pry'
 require 'timers'
 
@@ -7,29 +8,28 @@ module DIDV
 
   class Keyboard
 
-    attr_accessor :letter,:button1,:button2,:button3,:led,:timer
+    attr_accessor :buttons
 
-    def initialize
+    def initialize(conf)
       @letter = [0,0,0,0,0,0]
-      @button1 = Pin.new(:pin => 02, :direction => :in, invert: true)
-      @button2 = Pin.new(:pin => 03, :direction => :in, invert: true)
-      @button3 = Pin.new(:pin => 04, :direction => :in, invert: true)
+      @pinout = load_pinout conf
+      initialize_buttons
       @timer = Timers::Group.new
       #@led = Pin.new(:pin => 0, :direction=> :out)
     end
 
     def listen_keyboard(button_object,pos)
-      puts "Escutando Botão #{button_object.pin}"
+      puts "Escutando Botão #{button_object.pin}" #mensagem para debug
       thread = Thread.new do
         loop do
           button_object.wait_for_change
           if button_object.read == 1
-            puts "HIGH :D #{button_object.pin}"
+            puts "HIGH :D #{button_object.pin}" #mensagem para debug
             sleep(0.06)
             if button_object.read == 1
-              puts "Still HIGH :D #{button_object.pin}"
-              puts "#{@timer.current_offset}"
-              letter[pos-1] = 1
+              puts "Still HIGH :D #{button_object.pin}"#mensagem para debug
+              puts "#{@timer.current_offset}"#mensagem para debug
+              @letter[pos-1] = 1
             end
           end
         end
@@ -57,16 +57,27 @@ module DIDV
     end
 
     def wait_keyboard
-      listen_keyboard(@button1,1)
-      listen_keyboard(@button2,2)
-      listen_keyboard(@button3,3)
+      @buttons.each { |pos,pin| listen_keyboard(pin,pos) }
       wait
+    end
+
+    private
+
+    def load_pinout conf
+      YAML::load_file(conf)
+    end
+
+    def initialize_buttons
+      @buttons = {}
+      @pinout["buttons"].each do |pos,pin|
+        @buttons[pos] = Pin.new(pin: pin, direction: :in, invert: true)
+      end
     end
 
   end
 
 
-  key = Keyboard.new
+  key = Keyboard.new('pinout.yaml')
   key.initialize_timer
   key.wait_keyboard
 
