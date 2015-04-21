@@ -69,7 +69,7 @@ module DIDV
 
     def initialize_buttons
       @buttons = {}
-      @pinout["buttons"].each do |pos,pin|
+      @pinout["text"].each do |pos,pin|
         @buttons[pos] = Pin.new(pin: pin, direction: :in, invert: true)
       end
     end
