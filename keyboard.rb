@@ -3,19 +3,24 @@ include PiPiper
 require 'yaml'
 #require 'pry'
 require 'timers'
+require 'eventmachine'
 
 module DIDV
 
-  class Keyboard
+  class Keyboard < EventMachine::Connection
 
-    attr_accessor :buttons
+    attr_accessor :text_buttons, :navigation_buttons
 
-    def initialize(conf)
+    def initialize #(conf)
+      super
       @letter = [0,0,0,0,0,0]
-      @pinout = load_pinout conf
-      initialize_buttons
+      @nav_pressed = nil
+      @pinout = load_pinout "pinout.yaml" #conf
+      initialize_text_buttons
       @timer = Timers::Group.new
-      #@led = Pin.new(:pin => 0, :direction=> :out)
+      @response = "000000"
+      initialize_timer
+      wait_keyboard
     end
 
     def listen_keyboard(button_object,pos)
@@ -24,11 +29,11 @@ module DIDV
         loop do
           button_object.wait_for_change
           if button_object.read == 1
-            puts "HIGH :D #{button_object.pin}" #mensagem para debug
+            #puts "HIGH :D #{button_object.pin}" #mensagem para debug
             sleep(0.06)
             if button_object.read == 1
-              puts "Still HIGH :D #{button_object.pin}"#mensagem para debug
-              puts "#{@timer.current_offset}"#mensagem para debug
+              #puts "Still HIGH :D #{button_object.pin}"#mensagem para debug
+              #puts "#{@timer.current_offset}"#mensagem para debug
               @letter[pos-1] = 1
             end
           end
@@ -38,9 +43,45 @@ module DIDV
       thread
     end
 
+    def listen_nav_keyboard(button_object,pos)
+      puts "Escutando Botão de Navegação #{button_object.pin}" #mensagem para debug
+      thread = Thread.new do
+        loop do
+          button_object.wait_for_change
+          if button_object.read == 1
+            puts "HIGH :D #{button_object.pin}" #mensagem para debug
+            sleep(0.06)
+            if button_object.read == 1
+              puts "Still HIGH :D #{button_object.pin}"#mensagem para debug
+              puts "#{@timer.current_offset}"#mensagem para debug
+              case pos
+                when 1
+                  @nav_button = 's'.chr
+                when 2
+                  @nav_button = 'esp'.chr
+                when 3
+                  @nav_button = 'e'.chr
+                when 4
+                  @nav_button = 'fim'.chr
+                when 5
+                  @nav_button = 'a'.chr
+                when 6
+                  @nav_button = 'v'.chr
+                when 7
+                  @nav_button = 'b'.chr
+              end
+            end
+          end
+        end
+      end
+      thread.abort_on_exception = true
+      thread
+    end
+
+
     def initialize_timer
       thread = Thread.new do
-        @timer.every(0.50){send_and_clean}
+        @timer.every(0.60){send_and_clean}
         loop do
           @timer.wait
         end
@@ -52,13 +93,28 @@ module DIDV
     def send_and_clean
       if(@letter.join != '000000')
         puts "#{@letter.join}"
+        send_data @letter.join if @waiting
         @letter = [0,0,0,0,0,0]
+      end
+      if (@nav_button != nil)
+        puts @nav_button
+        send_data @nav_button.chr if @waiting
+        @nav_button = nil
       end
     end
 
     def wait_keyboard
-      @buttons.each { |pos,pin| listen_keyboard(pin,pos) }
-      wait
+      thread = Thread.new do
+        @text_buttons.each { |pos,pin| listen_keyboard(pin,pos) }
+        @navigation_buttons.each {|pos,pin| listen_nav_keyboard(pin,pos) }
+        wait
+      end
+      thread.abort_on_exception = true
+      thread
+    end
+
+    def receive_data(data)
+      @waiting = true if data == 'waiting'
     end
 
     private
@@ -67,19 +123,22 @@ module DIDV
       YAML::load_file(conf)
     end
 
-    def initialize_buttons
-      @buttons = {}
+    def initialize_text_buttons
+      @text_buttons = {}
+      @navigation_buttons = {}
       @pinout["text"].each do |pos,pin|
-        @buttons[pos] = Pin.new(pin: pin, direction: :in, invert: true)
+        @text_buttons[pos] = Pin.new(pin: pin, direction: :in, invert: true)
+      end
+      @pinout["navigation"].each do |pos,pin|
+        @navigation_buttons[pos] = Pin.new(pin: pin, direction: :in, invert: true)
       end
     end
 
   end
-
-
-  key = Keyboard.new('pinout.yaml')
-  key.initialize_timer
-  key.wait_keyboard
-
 #binding.pry
+end
+
+
+EventMachine.run do
+  EventMachine::connect '127.0.0.1',9001,DIDV::Keyboard
 end
