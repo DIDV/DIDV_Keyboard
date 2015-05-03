@@ -11,6 +11,7 @@ module DIDV
 
     attr_accessor :text_buttons, :navigation_buttons
 
+    
     def initialize #(conf)
       super
       @letter = [0,0,0,0,0,0]
@@ -23,6 +24,8 @@ module DIDV
       wait_keyboard
     end
 
+    #Inicia uma thread que observa os botões com função de digitação
+    #@param button_object[Object] , pos[int] objeto e sua posição no array de botões de navegação
     def listen_keyboard(button_object,pos)
       puts "Escutando Botão #{button_object.pin}" #mensagem para debug
       thread = Thread.new do
@@ -43,6 +46,8 @@ module DIDV
       thread
     end
 
+    #Inicia uma thread que observa os botões referentes a navegação na interface de usuário e na navegação de texto
+    #@param button_object[Object] pos[int] objeto e sua posição no array de botões de navegação
     def listen_nav_keyboard(button_object,pos)
       puts "Escutando Botão de Navegação #{button_object.pin}" #mensagem para debug
       thread = Thread.new do
@@ -78,7 +83,7 @@ module DIDV
       thread
     end
 
-
+    #inicializa o timer que dispara o evento de enviar o dado e limpar o array
     def initialize_timer
       thread = Thread.new do
         @timer.every(0.60){send_and_clean}
@@ -90,6 +95,7 @@ module DIDV
       thread
     end
 
+    #posta o dado para o servidor eventmachine e limpa o array de dados, para que novos dados possam ser capturados
     def send_and_clean
       if(@letter.join != '000000')
         puts "#{@letter.join}"
@@ -103,6 +109,7 @@ module DIDV
       end
     end
 
+    #observa os botões
     def wait_keyboard
       thread = Thread.new do
         @text_buttons.each { |pos,pin| listen_keyboard(pin,pos) }
@@ -113,16 +120,20 @@ module DIDV
       thread
     end
 
+    #recebe dado do EventMachine
+    #@param data[string]
     def receive_data(data)
       @waiting = true if data == 'waiting'
     end
 
     private
-
+    #carrega arquivo de configuração com os pinos
+    #@param conf[String] endereço do arquivo yaml com a configuração dos pinos
     def load_pinout conf
       YAML::load_file(conf)
     end
 
+    #passa a escutar os botões daemon principal
     def initialize_text_buttons
       @text_buttons = {}
       @navigation_buttons = {}
@@ -138,7 +149,7 @@ module DIDV
 #binding.pry
 end
 
-
+#executa client eventmachine que se conectará ao server no daemon principal
 EventMachine.run do
   EventMachine::connect '127.0.0.1',9001,DIDV::Keyboard
 end
