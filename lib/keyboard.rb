@@ -122,7 +122,7 @@ module DIDV
     end
 
     def receive_data(data)
-      @waiting ( data == 'waiting' )
+      @waiting = ( data == 'waiting' )
     end
 
     # Carrega arquivo de configuração com os pinos
