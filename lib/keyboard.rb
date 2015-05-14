@@ -1,7 +1,6 @@
 require 'pi_piper'
 include PiPiper
 require 'yaml'
-#require 'pry'
 require 'timers'
 require 'eventmachine'
 
@@ -11,39 +10,43 @@ module DIDV
 
     attr_accessor :text_buttons, :navigation_buttons
 
-    
-    def initialize #(conf)
+
+    def initialize
       super
-      @letter = [0,0,0,0,0,0]
-      @nav_pressed = nil
-      @pinout = load_pinout "pinout.yaml" #conf
-      initialize_text_buttons
-      @timer = Timers::Group.new
-      @response = "000000"
+      @letter = "000000"
+      load_pinout("pinout.yaml")
+      initialize_buttons
       initialize_timer
       wait_keyboard
     end
 
-    #Inicia uma thread que observa os botões com função de digitação
-    #@param button_object[Object] , pos[int] objeto e sua posição no array de botões de navegação
+    # Inicia uma thread que observa os botões com função de digitação
+    #
+    # @param button_object[Pin] pino do botão
+    # @param pos[int] posição do botão no array de botões de navegação
     def listen_keyboard(button_object,pos)
-      puts "Escutando Botão #{button_object.pin}" #mensagem para debug
+      puts "Escutando Botão #{button_object.pin}" # mensagem para debug
       thread = Thread.new do
         loop do
           button_object.wait_for_change
-          if button_object.read == 1
-            #puts "HIGH :D #{button_object.pin}" #mensagem para debug
-            sleep(0.06)
-            if button_object.read == 1
-              #puts "Still HIGH :D #{button_object.pin}"#mensagem para debug
-              #puts "#{@timer.current_offset}"#mensagem para debug
-              @letter[pos-1] = 1
-            end
-          end
+          @letter[pos-1] = 1 if check_button_state(button_object)
         end
       end
       thread.abort_on_exception = true
       thread
+    end
+
+    # Debouncer
+    #
+    # @param button[Pin] botão que será checado
+    def check_button_state(button)
+      if button.read == 1
+        sleep(0.06)
+        if button.read == 1
+          return true
+        end
+      end
+      false
     end
 
     #Inicia uma thread que observa os botões referentes a navegação na interface de usuário e na navegação de texto
@@ -59,21 +62,15 @@ module DIDV
             if button_object.read == 1
               puts "Still HIGH :D #{button_object.pin}"#mensagem para debug
               puts "#{@timer.current_offset}"#mensagem para debug
-              case pos
-                when 1
-                  @nav_button = 's'.chr
-                when 2
-                  @nav_button = 'esp'.chr
-                when 3
-                  @nav_button = 'e'.chr
-                when 4
-                  @nav_button = 'fim'.chr
-                when 5
-                  @nav_button = 'a'.chr
-                when 6
-                  @nav_button = 'v'.chr
-                when 7
-                  @nav_button = 'b'.chr
+
+              @nav_button = case pos
+              when 1 then 's'
+              when 2 then '000000'
+              when 3 then 'e'
+              when 4 then 'f'
+              when 5 then 'a'
+              when 6 then 'v'
+              when 7 then 'b'
               end
             end
           end
@@ -85,6 +82,7 @@ module DIDV
 
     #inicializa o timer que dispara o evento de enviar o dado e limpar o array
     def initialize_timer
+      @timer = Timers::Group.new
       thread = Thread.new do
         @timer.every(0.60){send_and_clean}
         loop do
@@ -97,16 +95,19 @@ module DIDV
 
     #posta o dado para o servidor eventmachine e limpa o array de dados, para que novos dados possam ser capturados
     def send_and_clean
-      if(@letter.join != '000000')
-        puts "#{@letter.join}"
-        send_data @letter.join if @waiting
-        @letter = [0,0,0,0,0,0]
+
+      if @letter != '000000'
+        p @letter
+        send_data @letter if @waiting
+        @letter = '000000'
       end
-      if (@nav_button != nil)
+
+      if @nav_button
         puts @nav_button
-        send_data @nav_button.chr if @waiting
+        send_data @nav_button if @waiting
         @nav_button = nil
       end
+
     end
 
     #observa os botões
@@ -120,36 +121,28 @@ module DIDV
       thread
     end
 
-    #recebe dado do EventMachine
-    #@param data[string]
     def receive_data(data)
-      @waiting = true if data == 'waiting'
+      @waiting ( data == 'waiting' )
     end
 
-    private
-    #carrega arquivo de configuração com os pinos
-    #@param conf[String] endereço do arquivo yaml com a configuração dos pinos
+    # Carrega arquivo de configuração com os pinos
+    #
+    # @param conf[String] endereço do arquivo yaml com a configuração dos pinos
     def load_pinout conf
-      YAML::load_file(conf)
+      @pinout = YAML::load_file(conf)
     end
 
-    #passa a escutar os botões daemon principal
-    def initialize_text_buttons
+    # Inicializa os botões
+    def initialize_buttons
       @text_buttons = {}
       @navigation_buttons = {}
-      @pinout["text"].each do |pos,pin|
-        @text_buttons[pos] = Pin.new(pin: pin, direction: :in, invert: true)
-      end
-      @pinout["navigation"].each do |pos,pin|
-        @navigation_buttons[pos] = Pin.new(pin: pin, direction: :in, invert: true)
-      end
+      @pinout["text"].each { |pos,pin| @text_buttons[pos] = Pin.new(pin: pin, direction: :in, invert: true) }
+      @pinout["navigation"].each { |pos,pin| @navigation_buttons[pos] = Pin.new(pin: pin, direction: :in, invert: true) }
+    end
+
+    def unbind
+      EM.stop
     end
 
   end
-#binding.pry
-end
-
-#executa client eventmachine que se conectará ao server no daemon principal
-EventMachine.run do
-  EventMachine::connect '127.0.0.1',9001,DIDV::Keyboard
 end
