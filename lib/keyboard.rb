@@ -14,7 +14,7 @@ module DIDV
     def initialize
       super
       @letter = "000000"
-      load_pinout("pinout.yaml")
+      load_pinout("#{File.dirname(__FILE__)}/pinout.yaml")
       initialize_buttons
       initialize_timer
       wait_keyboard
