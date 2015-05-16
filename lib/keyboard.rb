@@ -29,7 +29,7 @@ module DIDV
       thread = Thread.new do
         loop do
           button_object.wait_for_change
-          @letter[pos-1] = 1 if check_button_state(button_object)
+          @letter[pos-1] = '1' if check_button_state(button_object)
         end
       end
       thread.abort_on_exception = true

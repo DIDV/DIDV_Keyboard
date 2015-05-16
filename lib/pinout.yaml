@@ -1,15 +1,15 @@
 text:
-  1: 5 #pin29 1
-  2: 6 #pin31 2
-  3: 12 #pin32 3
-  4: 13 #pin33 4
-  5: 16 #pin36 5
-  6: 19 #pin19 6
+  1: 26 #pin 37
+  2: 19 #pin 35
+  3: 13 #pin 33
+  4: 02 #pin 3
+  5: 03 #pin 5
+  6: 04 #pin 7
 navigation:
-  1: 20 #pin38 ESC
-  2: 21 #pin40 ESPACO
-  3: 26 #pin37 ENTER
-  4: 23 #pin16 FIM
-  5: 24 #pin18 DOWN
-  6: 25 #pin22 UP
-  7: 27 #pin13 BACKSPACE
+  1: 23 #pin 16 esc s
+  2: 14 #pin 8 espaco 000000
+  3: 24 #pin 18 enter e
+  4: 15 #pin 10 FIM
+  5: 25 #pin 22 DOWN
+  6: 12 #pin 32 UP
+  7: 18 #pin 12 BACKSPACE
