@@ -136,8 +136,8 @@ module DIDV
     def initialize_buttons
       @text_buttons = {}
       @navigation_buttons = {}
-      @pinout["text"].each { |pos,pin| @text_buttons[pos] = Pin.new(pin: pin, direction: :in, invert: true) }
-      @pinout["navigation"].each { |pos,pin| @navigation_buttons[pos] = Pin.new(pin: pin, direction: :in, invert: true) }
+      @pinout["text"].each { |pos,info| @text_buttons[pos] = Pin.new(pin: info['gpio'], direction: :in, invert: info['invert']) }
+      @pinout["navigation"].each { |pos,info| @navigation_buttons[pos] = Pin.new(pin: info['gpio'], direction: :in, invert: info['invert']) }
     end
 
     def unbind
