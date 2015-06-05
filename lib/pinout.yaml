@@ -23,7 +23,7 @@ navigation:
     invert: false
   2: #espaco
     gpio: 21 #40
-    invert: false
+    invert: true
   3: #enter
     gpio: 26 #37
     invert: false
@@ -36,6 +36,6 @@ navigation:
   6: #up
     gpio: 25 #22
     invert: false
-  2: #backspace
+  7: #backspace
     gpio: 27 #13
     invert: false
