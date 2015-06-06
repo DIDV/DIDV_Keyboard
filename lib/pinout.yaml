@@ -1,15 +1,41 @@
 text:
-  1: 26 #pin 37
-  2: 19 #pin 35
-  3: 13 #pin 33
-  4: 02 #pin 3
-  5: 03 #pin 5
-  6: 04 #pin 7
+  1:
+    gpio: 5 #29
+    invert: true
+  2:
+    gpio: 6 #31
+    invert: true
+  3:
+    gpio: 12 #32
+    invert: true
+  4:
+    gpio: 13 #33
+    invert: true
+  5:
+    gpio: 16 #36
+    invert: true
+  6:
+    gpio: 19 #35
+    invert: true
 navigation:
-  1: 23 #pin 16 esc s
-  2: 14 #pin 8 espaco 000000
-  3: 24 #pin 18 enter e
-  4: 15 #pin 10 FIM
-  5: 25 #pin 22 DOWN
-  6: 12 #pin 32 UP
-  7: 18 #pin 12 BACKSPACE
+  1: #esc
+    gpio: 20 #38
+    invert: false
+  2: #espaco
+    gpio: 21 #40
+    invert: false
+  3: #enter
+    gpio: 26 #37
+    invert: false
+  4: #fim
+    gpio: 23 #16
+    invert: false
+  5: #down
+    gpio: 24 #18
+    invert: false
+  6: #up
+    gpio: 25 #22
+    invert: false
+  2: #backspace
+    gpio: 27 #13
+    invert: false

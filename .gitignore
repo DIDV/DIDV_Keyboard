@@ -37,4 +37,4 @@ build/
 #RubyMine files
 .idea/
 
-**/*.pid
+.pid
