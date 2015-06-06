@@ -1,21 +1,21 @@
 text:
   1:
-    gpio: 5 #29
+    gpio: 19 #5 #29
     invert: true
   2:
-    gpio: 6 #31
+    gpio: 16 #6 #31
     invert: true
   3:
-    gpio: 12 #32
+    gpio: 13 #12 #32
     invert: true
   4:
-    gpio: 13 #33
+    gpio: 12 #13 #33
     invert: true
   5:
-    gpio: 16 #36
+    gpio: 6 #16 #36
     invert: true
   6:
-    gpio: 19 #35
+    gpio: 5 #19 #35
     invert: true
 navigation:
   1: #esc
